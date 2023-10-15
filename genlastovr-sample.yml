@@ -1,0 +1,76 @@
+### genlastOVR.yml - configuration file to run genlastOVR.py
+#
+
+#
+# gvm connection
+gvm:
+   # for sock connection the local user who runs the script must be on 'gvm' group
+   connection: 'sock'
+   sock_path: '/var/run/gvm/gvmd.sock'
+   #connection: 'tls'
+   # for tls connection, add "-a 0.0.0.0 -p 9960" to /etc/sysconfig/gvmd
+   #hostname: localhost
+   #port: 9960
+   # tls secure connection doesn't work. not using following values
+   #cafile: /path/to/cafile
+   #certfile: /path/to/certfile
+   #keyfile: /path/to/keyfile
+   #password: keyfile_password
+
+#
+# This gsad user must have get_tasks permission in all tasks that will be exported
+# (usually I create a role and give get_tasks permissions to each task to this role)
+# (yeah, it works but should be easier)
+credentials:
+    user: 'reporter'
+    password: 'r3p0rt3r'
+
+# data directory (for this sample purposes, the linux user who runs the script
+#                 will be named 'reporter')
+workdir: '/home/reporter/vuln-scan'
+
+# where to get cisa known active exploited vulnerabilities list. cisa_file is relative to workdir
+cisa_url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
+cisa_file: '/filters/cisa_latest.txt'
+
+# where to get ms patch tuesday list. ms_file is relative to workdir
+ms_url: 'https://api.msrc.microsoft.com/cvrf/v2.0/document/'
+ms_file: '/filters/ms_latest.txt'
+
+# tasks whose results will be exported
+tasks: [
+    '001 - Servers',
+    '003 - Infra',
+]
+# filter used to export results
+global_filter: 'severity>3.9 apply_overrides=1 rows=1000 min_qod=70 first=1 sort-reverse=severity result_hosts_only=1' 
+
+# reports to be created
+reports:
+    '000.Cisa.Active.Exploits':
+        input: ['*.xml']
+        format: 'xlsx'
+        reporttype: ['h', 'v']
+        cve:
+            includes: '/home/reporter/vuln-scan/filters/cisa_latest.txt'
+    '001.Servers':
+        input: ['001*.xml']
+        format: 'xlsx'
+        reporttype: ['h', 'v']
+        regex:
+            excludes: ['defender', 'firefox', 'SSL/TLS', 'ssh', 'cipher']
+        network:
+            excludes: ['10.0.1.0/24','192.168.0.10-192.168.0.15', '172.20.9.16']
+        cve:
+            excludes: '/home/reporter/vuln-scan/filters/ms_latest.txt'
+    '002.Infra':
+        input: ['003*.xml']
+        format: 'xlsx'
+        reporttype: ['h', 'v']
+        regex:
+            excludes: ['defender', 'firefox', 'SSL/TLS', 'ssh', 'cipher']
+        network:
+            excludes: ['10.0.1.0/24','192.168.0.10-192.168.0.15', '172.20.9.16']
+        cve:
+            excludes: '/home/reporter/vuln-scan/filters/ms_latest.txt'
+

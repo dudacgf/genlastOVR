@@ -1,0 +1,4 @@
+# run pip install -r requirements.txt
+OpenVAS-Reporting
+python-gvm
+
