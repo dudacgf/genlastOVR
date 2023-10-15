@@ -7,8 +7,8 @@ gvm:
    # for sock connection the local user who runs the script must be on 'gvm' group
    connection: 'sock'
    sock_path: '/var/run/gvm/gvmd.sock'
+   # for tls connection, add OPTIONS="-a 0.0.0.0 -p 9960" to /etc/sysconfig/gvmd
    #connection: 'tls'
-   # for tls connection, add "-a 0.0.0.0 -p 9960" to /etc/sysconfig/gvmd
    #hostname: localhost
    #port: 9960
    # tls secure connection doesn't work. not using following values
