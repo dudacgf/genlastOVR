@@ -13,14 +13,11 @@ import yaml
 import pycurl
 import json
 
-from gvm.connections import UnixSocketConnection, TLSConnection
+from gvm.connections import UnixSocketConnection, TLSConnection, SSHConnection
 from gvm.protocols.gmp import Gmp
 from gvm.transforms import EtreeCheckCommandTransform
 from gvm.xml import pretty_print
 from gvm.protocols.gmpv224 import ReportFormatType
-
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
 weekdir = ''
 reportdir = ''
@@ -71,10 +68,11 @@ def get_last_reports():
     if gvm['connection'] == 'sock':
         connection = UnixSocketConnection(path=gvm['sock_path'])
     elif gvm['connection'] == 'tls':
-        # TODO find out how to use ssl/tls with gvmd
-        #connection = TLSConnection(hostname=gvm['hostname'], port=gvm['port'], cafile=gvm['cafile'],
-        #                           certfile=gvm['certfile'], keyfile=gvm['keyfile'])
         connection = TLSConnection(hostname=gvm['hostname'], port=gvm['port'])
+    elif gvm['connection'] == 'ssh':
+        connection = SSHConnection(hostname=gvm['hostname'], port=gvm['port'], 
+                                   username=gvm['username'], password=gvm['password'],
+                                   known_hosts_file="/home/duda/vuln-scan/bin/khosts", auto_accept_host=True) 
     transform = EtreeCheckCommandTransform()
     with Gmp(connection=connection, transform=transform) as gmp:
         gmp.authenticate(config['credentials']['user'], config['credentials']['password'])

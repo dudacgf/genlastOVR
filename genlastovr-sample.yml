@@ -7,16 +7,28 @@ gvm:
    # for sock connection the local user who runs the script must be on 'gvm' group
    connection: 'sock'
    sock_path: '/var/run/gvm/gvmd.sock'
-   # for tls connection, add OPTIONS="-a 0.0.0.0 -p 9960" to /etc/sysconfig/gvmd
+   
+   # for tls connection, 
+   # add 
+   #   OPTIONS="-a 0.0.0.0 -p 9390" to /etc/sysconfig/gvmd
+   # add 
+   #   OPTIONS="--mlisten 127.0.0.1 --mport 9390" to /etc/sysconfig/gsad
+   # remove --munix-socket=/var/run/gvmd/gvmd.sock from ExecStart option 
+   # on file /etc/systemd/system/multi-user.target.wants/gsad.service
+   # and execute commands
+   # systemctl daemon-reload
+   # systemctl restart gvmd.service
+   # systemctl restart gsad.service
+   # (or reboot server)
    #connection: 'tls'
    #hostname: localhost
-   #port: 9960
-   # tls secure connection doesn't work. not using following values
-   #cafile: /path/to/cafile
-   #certfile: /path/to/certfile
-   #keyfile: /path/to/keyfile
-   #password: keyfile_password
+   #port: 9390
 
+   #couldn't make ssh connection work
+   #connection: 'ssh'
+   #hostname: 'gvm.example.com'
+   #username: 'gmp'
+   #password: ''
 #
 # This gsad user must have get_tasks permission in all tasks that will be exported
 # (usually I create a role and give get_tasks permissions to each task to this role)
