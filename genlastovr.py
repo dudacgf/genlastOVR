@@ -196,14 +196,22 @@ def gen_reports():
         allFilters = [('network', 'n'), ('cve', 'e'), ('regex', 'r')]
         for afilter in allFilters:
             if afilter[0] in thisreport:
+                # if excludes/includes are lists, save the list as lines in a temp file
+                # if not, it is probably a relative path
                 if 'includes' in thisreport[afilter[0]]:
-                    f = filter_file(thisreport[afilter[0]]['includes'])
-                    cmdline.extend([f'-{afilter[1]}', f.name])
-                    filters.append(f)
+                    if isinstance(thisreport[afilter[0]]['includes'], list):
+                         f = filter_file(thisreport[afilter[0]]['includes'])
+                         cmdline.extend([f'-{afilter[1]}', f.name])
+                         filters.append(f)
+                    else:
+                         cmdline.extend([f'-{afilter[1]}', f'{config["workdir"]}/{thisreport[afilter[0]]["includes"]}'])
                 if 'excludes' in thisreport[afilter[0]]:
-                    f = filter_file(thisreport[afilter[0]]['excludes'])
-                    cmdline.extend([f'-{afilter[1].upper()}', f.name])
-                    filters.append(f)
+                    if isinstance(thisreport[afilter[0]]['excludes'], list):
+                        f = filter_file(thisreport[afilter[0]]['excludes'])
+                        cmdline.extend([f'-{afilter[1].upper()}', f.name])
+                        filters.append(f)
+                    else:
+                         cmdline.extend([f'-{afilter[1].upper()}', f'{config["workdir"]}/{thisreport[afilter[0]]["excludes"]}'])
         #
         # level of the cves to be filtered in the report
         if 'level' in thisreport:
@@ -218,6 +226,7 @@ def gen_reports():
             c = cmdline.copy()
             c.extend(['-T', rtype])
             c.extend(['-o', f'{weekdir}/{report}_by{rtype.upper()}.{thisreport["format"]}'])
+            #print(f'command: {c}')
             cp = subprocess.run(c, capture_output=True)
             if cp.returncode == 0:
                 print(f'OVR {weekdir}/{report}_by{rtype.upper()}.{thisreport["format"]} created.')
