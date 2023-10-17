@@ -4,42 +4,64 @@
 #
 # gvm connection
 gvm:
-   # for sock connection the local user who runs the script must be on 'gvm' group
+   #--- for sock connection 
+   # the local user who runs the script must be on 'gvm' group
    connection: 'sock'
    sock_path: '/var/run/gvm/gvmd.sock'
    
-   # for tls connection, 
-   # add 
-   #   OPTIONS="-a 0.0.0.0 -p 9390" to /etc/sysconfig/gvmd
-   # add 
-   #   OPTIONS="--mlisten 127.0.0.1 --mport 9390" to /etc/sysconfig/gsad
-   # remove --munix-socket=/var/run/gvmd/gvmd.sock from ExecStart option 
-   # on file /etc/systemd/system/multi-user.target.wants/gsad.service
-   # and execute commands
-   # systemctl daemon-reload
-   # systemctl restart gvmd.service
-   # systemctl restart gsad.service
-   # (or reboot server)
+   #--- for tls connection 
+   # 1. add 
+   #        OPTIONS="-a 0.0.0.0 -p 9390" 
+   #    to /etc/sysconfig/gvmd and add 
+   #       OPTIONS="--mlisten 127.0.0.1 --mport 9390" 
+   #    to /etc/sysconfig/gsad
+   #
+   # 2. remove --munix-socket=/var/run/gvmd/gvmd.sock from ExecStart option 
+   #    on file /etc/systemd/system/multi-user.target.wants/gsad.service
+   #
+   # 3. restart services 
+   # $ systemctl daemon-reload
+   # $ systemctl restart gvmd.service
+   # $ systemctl restart gsad.service
+   #
+   # 4. open the tcp port with firewall-cmd (if used)
+   # $ firewall-cmd --add-port=9390/tcp --permanent
+   # $ firewall-cmd --reload
+   #
    #connection: 'tls'
-   #hostname: localhost
+   #hostname: 'gvm.example.com'
    #port: 9390
 
-   #couldn't make ssh connection work
+   #--- for ssh connection
+   # the remote user at gvm server must connect to the gvm socket. To make it work:
+   # 1. create and grant execution permission to script gvm_socket_shell 
+   #    in the home folder of this user:
+   #        #!/bin/bash
+   #        socat UNIX:/var/run/gvmd/gvmd.sock -
+   #
+   # 2. modify shell for the user
+   # $ sudo usermod -s /home/{remote_user}/gvm_socket_shell.sh {remote_user}
+   #
+   # (solution by krisko at https://forum.greenbone.net/t/connect-python-client-python-gvm-to-gvm-11-via-ssh/4730/9)
+   #
+   # the remote user must be part of 'gvm' group
+   #
    #connection: 'ssh'
    #hostname: 'gvm.example.com'
-   #username: 'gmp'
-   #password: ''
+   #port: 22
+   #username: '{remote_user}'
+   #password: '{remote_password}'
+
 #
 # This gsad user must have get_tasks permission in all tasks that will be exported
 # (usually I create a role and give get_tasks permissions to each task to this role)
 # (yeah, it works but should be easier)
 credentials:
-    user: 'reporter'
-    password: 'r3p0rt3r'
+    user: '{gsad_user}'
+    password: '{gsad_password}'
 
-# data directory (for this sample purposes, the linux user who runs the script
-#                 will be named 'reporter')
-workdir: '/home/reporter/vuln-scan'
+# data directory 
+workdir: '/path/to/work/directory'
 
 # where to get cisa known active exploited vulnerabilities list. cisa_file is relative to workdir
 cisa_url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
@@ -64,7 +86,7 @@ reports:
         format: 'xlsx'
         reporttype: ['h', 'v']
         cve:
-            includes: '/home/reporter/vuln-scan/filters/cisa_latest.txt'
+            includes: '/filters/cisa_latest.txt'
     '001.Servers':
         input: ['001*.xml']
         format: 'xlsx'
@@ -74,7 +96,7 @@ reports:
         network:
             excludes: ['10.0.1.0/24','192.168.0.10-192.168.0.15', '172.20.9.16']
         cve:
-            excludes: '/home/reporter/vuln-scan/filters/ms_latest.txt'
+            excludes: '/filters/ms_latest.txt'
     '002.Infra':
         input: ['003*.xml']
         format: 'xlsx'
@@ -84,5 +106,5 @@ reports:
         network:
             excludes: ['10.0.1.0/24','192.168.0.10-192.168.0.15', '172.20.9.16']
         cve:
-            excludes: '/home/reporter/vuln-scan/filters/ms_latest.txt'
+            excludes: '/filters/ms_latest.txt'
 
