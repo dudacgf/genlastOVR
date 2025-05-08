@@ -17,7 +17,7 @@ from gvm.connections import UnixSocketConnection, TLSConnection, SSHConnection
 from gvm.protocols.gmp import Gmp
 from gvm.transforms import EtreeCheckCommandTransform
 from gvm.xml import pretty_print
-from gvm.protocols.gmpv224 import ReportFormatType
+from gvm.protocols.gmp._gmp226 import ReportFormatType
 
 weekdir = ''
 reportdir = ''
@@ -50,7 +50,7 @@ def initializations():
     today = datetime.date.today()
     year = today.year
     month = today.month
-    week = today.day // 7
+    week = today.day // 7 + 1
     weekdir = f'{config["workdir"]}/{year}-{month}/w{week}'
     reportdir = f'{weekdir}/reports'
     os.makedirs(reportdir, exist_ok=True)
@@ -96,7 +96,14 @@ def get_last_reports():
 
 def _cvenum(e):
     # this function will be used for cve list sort
-    [dummy, year, number] = e.split('-')
+    try:
+       [dummy, year, number] = e.split('-')
+    except:
+       pass
+    try:
+       [dummy, year, number, dummy] = e.split('-')
+    except:
+       return(0);
     padded_number = "%010d" % int(number)
     return(int(f'{year}{padded_number}'))
 
@@ -137,7 +144,6 @@ def get_last_ms_patches():
         return list(filter(lambda d:d[3] == 1 and d[1] == month,  
                            c.itermonthdays4(year, month)))[1][2]
 
-    print('Generating list of most recent Microsoft tuesday patch CVEs')
     # check if beyond second tuesday of this month
     today = datetime.date.today()
     if second_tuesday() < today.day: 
