@@ -2,3 +2,4 @@
 OpenVAS-Reporting
 python-gvm
 pyyaml
+pycurl
