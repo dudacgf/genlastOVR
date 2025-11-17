@@ -145,6 +145,7 @@ def get_last_ms_patches():
                            c.itermonthdays4(year, month)))[1][2]
 
     # check if beyond second tuesday of this month
+    print('Generating list of Microsoft\'s most recent monthly updates')
     today = datetime.date.today()
     if second_tuesday() < today.day: 
         # yep, get this month's list of patches
