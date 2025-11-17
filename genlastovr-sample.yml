@@ -68,7 +68,7 @@ cisa_url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulner
 cisa_file: '/filters/cisa_latest.txt'
 
 # where to get ms patch tuesday list. ms_file is relative to workdir
-ms_url: 'https://api.msrc.microsoft.com/cvrf/v2.0/document/'
+ms_url: 'https://api.msrc.microsoft.com/cvrf/v3.0/cvrf/'
 ms_file: '/filters/ms_latest.txt'
 
 # tasks whose results will be exported
