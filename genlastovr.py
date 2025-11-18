@@ -257,13 +257,17 @@ def gen_reports():
     #
     # send reports as email attachment
     if len(reports2mail) > 0:
+        print('sending email with report(s) attached')
         import smtplib
         from email.message import EmailMessage
+        from email.utils import make_msgid
 
         msg = EmailMessage()
         msg['Subject'] = f'{config["mail"]["SubjectTag"]} - {today.year}-{today.month}-w{today.day // 7 + 1}'
         msg['From'] = config['mail']['From'] 
         msg['To'] = config['mail']['To']
+        msg.set_content(config['mail']['BodyText'])
+
         for r in reports2mail:
             with open(r, 'rb') as fp:
                 excel_file = fp.read()

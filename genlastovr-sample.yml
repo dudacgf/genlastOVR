@@ -83,6 +83,7 @@ mail:
   SubjectTag: '[GVM Reports]'
   From: 'gvm-openvas@example.com'
   To: 'support@example.com'
+  BodyText: 'This are the openvasreporting reports generated from the last GVM/Openvas run'
 
 # filter used to export results
 global_filter: 'severity>3.9 apply_overrides=1 rows=1000 min_qod=70 first=1 sort-reverse=severity result_hosts_only=1' 
