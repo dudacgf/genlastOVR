@@ -254,6 +254,8 @@ def gen_reports():
         # clean up temporary filter files
         for f in filters: os.unlink(f.name)
 
+    #
+    # send reports as email attachment
     if len(reports2mail) > 0:
         import smtplib
         from email.message import EmailMessage
