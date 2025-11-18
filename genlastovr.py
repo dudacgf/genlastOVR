@@ -19,7 +19,9 @@ from gvm.transforms import EtreeCheckCommandTransform
 from gvm.xml import pretty_print
 from gvm.protocols.gmp._gmp226 import ReportFormatType
 
+today = datetime.date.today()
 weekdir = ''
+week = 0
 reportdir = ''
 config = []
 
@@ -47,7 +49,6 @@ def initializations():
         config = yaml.safe_load(c)
     #
     # create this week work and report dirs
-    today = datetime.date.today()
     year = today.year
     month = today.month
     week = today.day // 7 + 1
@@ -187,6 +188,7 @@ def gen_reports():
         return f
 
     print('Generating OVRs')
+    reports2mail = []
     for report in config['reports']:
         thisreport = config['reports'][report]
         filters = []
@@ -227,6 +229,12 @@ def gen_reports():
         # reporttype
         if not 'reporttype' in thisreport:
             thisreport['reporttype'] = ['v']
+
+        #
+        # send email
+        if not 'sendmail' in thisreport:
+            thisreport['sendmail'] = False
+
         #
         # generates an OVR for each reporttype
         for rtype in thisreport['reporttype']:
@@ -237,12 +245,36 @@ def gen_reports():
             cp = subprocess.run(c, capture_output=True)
             if cp.returncode == 0:
                 print(f'OVR {weekdir}/{report}_by{rtype.upper()}.{thisreport["format"]} created.')
+                if thisreport['sendmail']:
+                    reports2mail.append(f'{weekdir}/{report}_by{rtype.upper()}.{thisreport["format"]}');
             else:
                 erro = cp.stderr[:-1].decode("unicode_escape").split('\n')[-1] # discard traceback
                 print(f'Error generating OVR {weekdir}/{report}_by{rtype.upper()}.{thisreport["format"]}: {erro}')
         #
         # clean up temporary filter files
         for f in filters: os.unlink(f.name)
+
+    if len(reports2mail) > 0:
+        import smtplib
+        from email.message import EmailMessage
+
+        msg = EmailMessage()
+        msg['Subject'] = f'{config["mail"]["SubjectTag"]} - {today.year}-{today.month}-w{today.day // 7 + 1}'
+        msg['From'] = config['mail']['From'] 
+        msg['To'] = config['mail']['To']
+        for r in reports2mail:
+            with open(r, 'rb') as fp:
+                excel_file = fp.read()
+            msg.add_attachment(excel_file, maintype='application', 
+                               subtype='vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                               filename=os.path.basename(r));
+
+        with smtplib.SMTP(config['mail']['Relay']) as s:
+            s.ehlo()
+            s.starttls()
+            s.ehlo()
+            s.send_message(msg)
+       
 
 
 def main():
