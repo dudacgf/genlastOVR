@@ -79,6 +79,7 @@ tasks: [
 
 # mail configuration
 mail:
+  sendmail: False
   Relay: 'email.example.com'
   SubjectTag: '[GVM Reports]'
   From: 'gvm-openvas@example.com'
