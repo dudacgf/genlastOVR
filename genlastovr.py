@@ -4,8 +4,9 @@ import argparse
 import tempfile
 import subprocess
 import os
-import datetime
-import calendar
+
+from dateutil.rrule import rrule, MONTHLY, TU
+from datetime import datetime
 
 from io import BytesIO 
 from xml.dom import minidom
@@ -19,7 +20,7 @@ from gvm.transforms import EtreeCheckCommandTransform
 from gvm.xml import pretty_print
 from gvm.protocols.gmp._gmp226 import ReportFormatType
 
-today = datetime.date.today()
+today = datetime.today()
 weekdir = ''
 week = 0
 reportdir = ''
@@ -138,23 +139,18 @@ def get_last_ms_patches():
     get last Microsoft's list of second tuesday patches
     """
     def second_tuesday():
-        c = calendar.Calendar()
-        today = datetime.date.today()
-        month = today.month
-        year = today.year
-        return list(filter(lambda d:d[3] == 1 and d[1] == month,  
-                           c.itermonthdays4(year, month)))[1][2]
+         return list(rrule(MONTHLY, byweekday=TU(2), dtstart=datetime.today().replace(day=1), count=1))[0]
 
     # check if beyond second tuesday of this month
     print('Generating list of Microsoft\'s most recent monthly updates')
-    today = datetime.date.today()
-    if second_tuesday() < today.day: 
+    today = datetime.today()
+    if second_tuesday() < today: 
         # yep, get this month's list of patches
         year = today.year
         mname = today.strftime("%b")
     else: 
         # nope, get last month's list of patches
-        ldp_month = datetime.date.today().replace(day=1) - datetime.timedelta(days=1)
+        ldp_month = datetime.today().replace(day=1) - datetime.timedelta(days=1)
         year = ldp_month.year
         mname = ldp_month.strftime("%b")
     url=f'{config["ms_url"]}{year}-{mname}'
@@ -256,7 +252,7 @@ def gen_reports():
 
     #
     # send reports as email attachment
-    if len(reports2mail) > 0:
+    if len(reports2mail) > 0 and config['mail']['sendmail']:
         print('sending email with report(s) attached')
         import smtplib
         from email.message import EmailMessage
@@ -280,6 +276,8 @@ def gen_reports():
             s.starttls()
             s.ehlo()
             s.send_message(msg)
+    else:
+        print('no mail will be sent')
        
 
 
